@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DXPeditions.App/DXPeditions.App.csproj" />
+    <Project Path="src/DXPeditions.Core/DXPeditions.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DXPeditions.Core.Tests/DXPeditions.Core.Tests.csproj" />
+  </Folder>
+</Solution>

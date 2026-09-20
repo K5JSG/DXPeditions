@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="1.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Dxcc\Resources\aliases.json" />
+    <EmbeddedResource Include="Dxcc\Resources\dxcc_entities.json" />
+  </ItemGroup>
+
+</Project>
