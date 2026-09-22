@@ -16,6 +16,9 @@ public partial class MainForm : Form
     {
         InitializeComponent();
 
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+        picLogo.Image = LoadEmbeddedLogo();
+
         // All checked by default, so the regex is fully inclusive until the user
         // actually tells it a band their station can't work.
         foreach (var band in StandardBands.All)
@@ -181,6 +184,18 @@ public partial class MainForm : Form
     }
 
     private void SetStatus(string text) => lblStatus.Text = text;
+
+    private static Image? LoadEmbeddedLogo()
+    {
+        using var stream = typeof(MainForm).Assembly.GetManifestResourceStream("DXPeditions.App.Resources.Logo.png");
+        if (stream is null)
+        {
+            return null;
+        }
+
+        using var embedded = Image.FromStream(stream);
+        return new Bitmap(embedded);
+    }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {

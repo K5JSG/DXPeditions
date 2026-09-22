@@ -31,6 +31,7 @@ partial class MainForm
     private GroupBox grpHrd;
     private TextBox txtHrdChecklist;
     private Button btnCopyHrd;
+    private PictureBox picLogo;
 
     private void InitializeComponent()
     {
@@ -52,6 +53,7 @@ partial class MainForm
         grpHrd = new GroupBox { Name = "grpHrd" };
         txtHrdChecklist = new TextBox { Name = "txtHrdChecklist" };
         btnCopyHrd = new Button { Name = "btnCopyHrd" };
+        picLogo = new PictureBox { Name = "picLogo" };
 
         ((System.ComponentModel.ISupportInitialize)numYear).BeginInit();
         ((System.ComponentModel.ISupportInitialize)splitMain).BeginInit();
@@ -109,6 +111,14 @@ partial class MainForm
         lblStatus.AutoSize = true;
         lblStatus.Location = new Point(404, 14);
         lblStatus.Text = string.Empty;
+
+        // picLogo - top-right corner of the window, spanning from just below the title
+        // bar's close button down to just above the results grid (pnlToolbar + pnlBands).
+        // It's a direct child of the form (not pnlToolbar) so it isn't clipped to the
+        // 44px-tall toolbar strip.
+        picLogo.Size = new Size(70, 70);
+        picLogo.Location = new Point(1100 - 8 - 70, 2);
+        picLogo.SizeMode = PictureBoxSizeMode.Zoom;
 
         // pnlBands
         pnlBands.Dock = DockStyle.Top;
@@ -186,8 +196,10 @@ partial class MainForm
         Controls.Add(splitMain);
         Controls.Add(pnlBands);
         Controls.Add(pnlToolbar);
+        Controls.Add(picLogo);
         Text = "DXPeditions Tracker";
         MinimumSize = new Size(800, 500);
+        picLogo.BringToFront();
 
         ((System.ComponentModel.ISupportInitialize)numYear).EndInit();
         splitMain.Panel1.ResumeLayout(false);
