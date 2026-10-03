@@ -22,4 +22,15 @@ public sealed class NeededResult
     public required IReadOnlyList<string> NeededModes { get; init; }
     public required bool HasAnyQso { get; init; }
     public required bool HasAnyConfirmedQso { get; init; }
+
+    /// <summary>
+    /// Whether this entity is needed on something the user's station can actually
+    /// work. <see cref="IsNeeded"/> counts all 11 standard bands, so a station with
+    /// no 160m/80m/60m/6m capability sees nearly everything as needed. With a band
+    /// set, an entity counts only if it's unconfirmed on at least one of those bands
+    /// - nothing else (per the user: "what ever is checked should be what is listed,
+    /// nothing more"), so a mode-only need doesn't count. Null means no limitation.
+    /// </summary>
+    public bool IsNeededOn(IReadOnlySet<string>? workableBands) =>
+        IsNeeded && (workableBands is null || NeededBands.Any(workableBands.Contains));
 }

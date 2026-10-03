@@ -108,16 +108,22 @@ partial class MainForm
         btnFetch.Click += BtnFetch_Click;
 
         // lblStatus
-        lblStatus.AutoSize = true;
+        // Fixed width (sized to stop short of the logo in MainForm.OnResize) with an
+        // ellipsis, so a long status line doesn't run underneath the logo.
+        lblStatus.AutoSize = false;
+        lblStatus.AutoEllipsis = true;
         lblStatus.Location = new Point(404, 14);
+        lblStatus.Height = 20;
         lblStatus.Text = string.Empty;
 
         // picLogo - top-right corner of the window, spanning from just below the title
         // bar's close button down to just above the results grid (pnlToolbar + pnlBands).
         // It's a direct child of the form (not pnlToolbar) so it isn't clipped to the
-        // 44px-tall toolbar strip.
+        // 44px-tall toolbar strip. Anchored right so it follows the window's right
+        // edge when resized or maximized.
         picLogo.Size = new Size(70, 70);
         picLogo.Location = new Point(1100 - 8 - 70, 2);
+        picLogo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         picLogo.SizeMode = PictureBoxSizeMode.Zoom;
 
         // pnlBands
@@ -131,7 +137,7 @@ partial class MainForm
         // lblBands
         lblBands.AutoSize = true;
         lblBands.Margin = new Padding(0, 6, 12, 0);
-        lblBands.Text = "Workable bands (limits GridTracker regex):";
+        lblBands.Text = "Workable bands (limits needed list and regex):";
 
         // splitMain
         splitMain.Dock = DockStyle.Fill;

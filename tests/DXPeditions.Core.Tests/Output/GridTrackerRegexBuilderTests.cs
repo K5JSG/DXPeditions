@@ -95,16 +95,15 @@ public class GridTrackerRegexBuilderTests
     }
 
     [Fact]
-    public void DoesNotExcludeAnEntityNeededPurelyForAModeReason()
+    public void ExcludesAnEntityNeededPurelyForAModeReasonWhenBandsAreLimited()
     {
-        // Fully confirmed on every band already (NeededBands empty) but still
-        // needed for a mode - a band filter must not silently drop this, since
-        // it isn't a band-capability issue at all.
+        // Already confirmed on every band (NeededBands empty) - with a band filter
+        // only unconfirmed checked bands count, so a mode-only need is left out.
         var results = new[] { MakeResult(needed: true, neededBands: [], "V51WH") };
 
         var regex = GridTrackerRegexBuilder.Build(results, workableBands: new HashSet<string> { "20m" });
 
-        Assert.Contains("^V51WH$", regex);
+        Assert.Equal(string.Empty, regex);
     }
 
     [Fact]

@@ -9,6 +9,7 @@ public sealed class AppServices : IDisposable
     public const string AdifLogPath = @"C:\Users\jsgay\AppData\Local\WSJT-X\wsjtx_log.adi";
     public const string IotaCacheFilePath = @"C:\Users\jsgay\AppData\Local\DXPeditions\cache\iota_fulllist.json";
     public const string DxWorldArticleCacheFilePath = @"C:\Users\jsgay\AppData\Local\DXPeditions\cache\dxworld_articles.json";
+    public const string SettingsFilePath = @"C:\Users\jsgay\AppData\Local\DXPeditions\settings.json";
 
     public HttpFetcher Fetcher { get; }
     public DxccReference DxccReference { get; }

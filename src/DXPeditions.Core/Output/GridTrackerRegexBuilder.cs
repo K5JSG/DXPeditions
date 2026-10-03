@@ -11,18 +11,15 @@ namespace DXPeditions.Core.Output;
 public static class GridTrackerRegexBuilder
 {
     /// <summary>
-    /// <paramref name="workableBands"/> limits the regex to entities actually
-    /// needed on a band the user's station can work - one whose only band-level
-    /// need is on a band the user can't work (e.g. no 160m antenna) is left out,
-    /// since there'd be no point alerting for it. Null (the default) means no
-    /// station limitation - every needed entity is included, as before. An entity
-    /// needed purely for a *mode* reason (already confirmed on every band) is
-    /// never excluded by this filter, since it isn't a band-capability issue.
+    /// <paramref name="workableBands"/> limits the regex to entities still
+    /// unconfirmed on at least one band the user's station can work (see
+    /// <see cref="NeededResult.IsNeededOn"/>). Null (the default) means no
+    /// station limitation - every needed entity is included.
     /// </summary>
     public static string Build(IEnumerable<NeededResult> results, IReadOnlySet<string>? workableBands = null)
     {
         var callsigns = results
-            .Where(r => r.IsNeeded && IsWorkable(r, workableBands))
+            .Where(r => r.IsNeededOn(workableBands))
             .SelectMany(r => r.Announcement.Callsigns)
             .Select(c => c.ToUpperInvariant())
             .Distinct()
@@ -36,7 +33,4 @@ public static class GridTrackerRegexBuilder
 
         return string.Join('|', callsigns.Select(c => $"^{Regex.Escape(c)}$"));
     }
-
-    private static bool IsWorkable(NeededResult result, IReadOnlySet<string>? workableBands) =>
-        workableBands is null || result.NeededBands.Count == 0 || result.NeededBands.Any(workableBands.Contains);
 }

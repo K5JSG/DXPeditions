@@ -10,7 +10,14 @@ namespace DXPeditions.App;
 public partial class MainForm : Form
 {
     private readonly AppServices _services = new();
+    private readonly AppSettings _settings = AppSettings.Load(AppServices.SettingsFilePath);
+    private readonly ToolTip _statusToolTip = new();
     private readonly Dictionary<string, CheckBox> _bandCheckboxes = new(StringComparer.OrdinalIgnoreCase);
+
+    // The last Fetch's results, kept so changing a band checkbox afterwards can
+    // re-render every output without re-fetching. Null until a Fetch completes.
+    private List<NeededResult>? _lastResults;
+    private string _lastSourceSummary = "";
 
     public MainForm()
     {
@@ -19,17 +26,18 @@ public partial class MainForm : Form
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         picLogo.Image = LoadEmbeddedLogo();
 
-        // All checked by default, so the regex is fully inclusive until the user
-        // actually tells it a band their station can't work.
+        // Restored from last run; all checked on first run, so every output is
+        // fully inclusive until the user tells it a band their station can't work.
         foreach (var band in StandardBands.All)
         {
             var checkbox = new CheckBox
             {
                 Text = band,
-                Checked = true,
+                Checked = _settings.WorkableBands?.Contains(band, StringComparer.OrdinalIgnoreCase) ?? true,
                 AutoSize = true,
                 Margin = new Padding(0, 6, 10, 0),
             };
+            checkbox.CheckedChanged += (_, _) => RenderResults();
             _bandCheckboxes[band] = checkbox;
             pnlBands.Controls.Add(checkbox);
         }
@@ -50,6 +58,7 @@ public partial class MainForm : Form
     private async void BtnFetch_Click(object? sender, EventArgs e)
     {
         btnFetch.Enabled = false;
+        _lastResults = null;
         dgvResults.DataSource = null;
         txtGridTrackerRegex.Text = string.Empty;
         txtHrdRegex.Text = string.Empty;
@@ -96,16 +105,13 @@ public partial class MainForm : Form
                 .ToList();
             var results = announcements.Select(calculator.Evaluate).ToList();
 
-            PopulateGrid(results);
-            txtGridTrackerRegex.Text = GridTrackerRegexBuilder.Build(results, GetWorkableBands());
-            txtHrdRegex.Text = HrdRegexChunker.Build(txtGridTrackerRegex.Text);
-
-            var neededCount = results.Count(r => r.IsNeeded);
             var iotaNote = iotaTask.Result.Count == 0 ? ", IOTA lookup unavailable this run" : "";
             var failureNote = failedSources.Count > 0 ? $", unavailable this run: {string.Join(", ", failedSources)}" : "";
-            SetStatus($"Done - {neededCount} needed of {results.Count} announced ({announcements.Count} total: " +
-                      $"{ng3kTask.Result.Count} ng3k, {dxWorldResult.Count} dx-world.net, {va3rjTask.Result.Count} va3rj, " +
-                      $"{ham365Task.Result.Count} ham365, {dxn425Task.Result.Count} 425dxn{iotaNote}{failureNote})");
+            _lastSourceSummary = $"{announcements.Count} total: " +
+                                 $"{ng3kTask.Result.Count} ng3k, {dxWorldResult.Count} dx-world.net, {va3rjTask.Result.Count} va3rj, " +
+                                 $"{ham365Task.Result.Count} ham365, {dxn425Task.Result.Count} 425dxn{iotaNote}{failureNote}";
+            _lastResults = results;
+            RenderResults();
         }
         catch (Exception ex)
         {
@@ -118,16 +124,37 @@ public partial class MainForm : Form
         }
     }
 
+    /// <summary>
+    /// Fills the grid, both regex outputs and the needed count from the last
+    /// Fetch's results using the currently checked bands. Runs after a Fetch and
+    /// again whenever a band checkbox changes.
+    /// </summary>
+    private void RenderResults()
+    {
+        if (_lastResults is null)
+        {
+            return;
+        }
+
+        var workableBands = GetWorkableBands();
+        PopulateGrid(_lastResults, workableBands);
+        txtGridTrackerRegex.Text = GridTrackerRegexBuilder.Build(_lastResults, workableBands);
+        txtHrdRegex.Text = HrdRegexChunker.Build(txtGridTrackerRegex.Text);
+
+        var neededCount = _lastResults.Count(r => r.IsNeededOn(workableBands));
+        SetStatus($"Done - {neededCount} needed of {_lastResults.Count} announced ({_lastSourceSummary})");
+    }
+
     private static readonly Color NewEntityHighlight = Color.FromArgb(255, 249, 196); // soft gold - "never worked before"
 
-    private void PopulateGrid(List<NeededResult> results)
+    private void PopulateGrid(List<NeededResult> results, IReadOnlySet<string> workableBands)
     {
         var rows = results
-            .OrderByDescending(r => r.IsNeeded)
+            .OrderByDescending(r => r.IsNeededOn(workableBands))
             .ThenBy(r => r.DxccEntityName ?? r.Announcement.RawEntityName, StringComparer.OrdinalIgnoreCase)
             .Select(r => new ResultRow
             {
-                Needed = r.IsNeeded,
+                Needed = r.IsNeededOn(workableBands),
                 Entity = r.DxccEntityName ?? r.Announcement.RawEntityName,
                 Start = r.Announcement.StartDate?.ToString() ?? "?",
                 End = r.Announcement.EndDate?.ToString() ?? "?",
@@ -183,7 +210,26 @@ public partial class MainForm : Form
         }
     }
 
-    private void SetStatus(string text) => lblStatus.Text = text;
+    // The label is cut short with "..." before the logo, so the full text is
+    // also available by hovering over it.
+    private void SetStatus(string text)
+    {
+        lblStatus.Text = text;
+        _statusToolTip.SetToolTip(lblStatus, text);
+    }
+
+    protected override void OnLayout(LayoutEventArgs levent)
+    {
+        // After base.OnLayout, so the anchored logo is already in its new spot.
+        base.OnLayout(levent);
+
+        // picLogo is anchored to the right edge; keep the status line ending just
+        // before it at any window size.
+        if (lblStatus is not null && picLogo is not null)
+        {
+            lblStatus.Width = Math.Max(0, picLogo.Left - lblStatus.Left - 8);
+        }
+    }
 
     private static Image? LoadEmbeddedLogo()
     {
@@ -195,6 +241,49 @@ public partial class MainForm : Form
 
         using var embedded = Image.FromStream(stream);
         return new Bitmap(embedded);
+    }
+
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+
+        // Applied here rather than in the constructor: the containers only have
+        // their real docked size once the form is laid out.
+        ApplySplitRatio(splitMain, _settings.MainSplitRatio);
+        ApplySplitRatio(splitOutputs, _settings.OutputsSplitRatio);
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _settings.WorkableBands = GetWorkableBands().ToList();
+        _settings.MainSplitRatio = GetSplitRatio(splitMain) ?? _settings.MainSplitRatio;
+        _settings.OutputsSplitRatio = GetSplitRatio(splitOutputs) ?? _settings.OutputsSplitRatio;
+        _settings.Save(AppServices.SettingsFilePath);
+        base.OnFormClosing(e);
+    }
+
+    private static int SplitLength(SplitContainer split) =>
+        split.Orientation == Orientation.Vertical ? split.Width : split.Height;
+
+    private static double? GetSplitRatio(SplitContainer split)
+    {
+        var length = SplitLength(split);
+        return length > 0 ? (double)split.SplitterDistance / length : null;
+    }
+
+    private static void ApplySplitRatio(SplitContainer split, double? ratio)
+    {
+        if (ratio is not (> 0 and < 1))
+        {
+            return;
+        }
+
+        var distance = (int)(ratio.Value * SplitLength(split));
+        var max = SplitLength(split) - split.Panel2MinSize - split.SplitterWidth;
+        if (distance >= split.Panel1MinSize && distance <= max)
+        {
+            split.SplitterDistance = distance;
+        }
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
