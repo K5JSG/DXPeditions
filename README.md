@@ -1,6 +1,6 @@
 # DXPeditions Tracker
 
-A Windows desktop tool for chasing DXCC. For a chosen month, it pulls every announced DXpedition and special-event activation from five sources, cross-references the callsigns against your own ADIF log, and tells you which ones you actually still need — then hands you a ready-to-paste GridTracker 2 regex and a Ham Radio Deluxe DX Cluster Alarms checklist so you don't have to build either by hand.
+A Windows desktop tool for chasing DXCC. For a chosen month, it pulls every announced DXpedition and special-event activation from five sources, cross-references the callsigns against your own ADIF log, and tells you which ones you actually still need — then hands you a ready-to-paste GridTracker 2 regex, plus the same regex split into blocks sized for Ham Radio Deluxe DX Cluster Alarms, so you don't have to build either by hand.
 
 Built by Jeremy S. Gaynor, K5JSG.
 
@@ -18,6 +18,8 @@ Built by Jeremy S. Gaynor, K5JSG.
 ## Installation
 
 Download the latest installer from the [Releases](../../releases) page and run it. The app is self-contained — no separate .NET runtime install is required.
+
+Running a newer installer upgrades the existing copy in place: Installed Apps keeps a single entry showing the new version, and your shortcuts stay where they are. It also removes any other installed copy of DXPeditions Tracker and any file an older version installed that the new one no longer ships. Your settings and caches live in `%LocalAppData%\DXPeditions` and are never touched.
 
 ## Building from source
 
