@@ -20,17 +20,22 @@ public sealed class NeededResult
     public required bool IsNeeded { get; init; }
     public required IReadOnlyList<string> NeededBands { get; init; }
     public required IReadOnlyList<string> NeededModes { get; init; }
+
+    /// <summary>
+    /// For each standard band, the modes (CW/SSB/Digital) not yet confirmed on
+    /// that band. Bands with every mode confirmed are left out.
+    /// </summary>
+    public required IReadOnlyDictionary<string, IReadOnlyList<string>> NeededModesByBand { get; init; }
     public required bool HasAnyQso { get; init; }
     public required bool HasAnyConfirmedQso { get; init; }
 
     /// <summary>
-    /// Whether this entity is needed on something the user's station can actually
-    /// work. <see cref="IsNeeded"/> counts all 11 standard bands, so a station with
-    /// no 160m/80m/60m/6m capability sees nearly everything as needed. With a band
-    /// set, an entity counts only if it's unconfirmed on at least one of those bands
-    /// - nothing else (per the user: "what ever is checked should be what is listed,
-    /// nothing more"), so a mode-only need doesn't count. Null means no limitation.
+    /// Whether this entity is needed on a band the user's station can work: true
+    /// if any checked band still has an unconfirmed mode (e.g. 40m SSB confirmed
+    /// but 40m CW not). Unchecked bands are ignored entirely - the user's rule is
+    /// "what ever is checked should be what is listed, nothing more". Null means
+    /// every standard band.
     /// </summary>
     public bool IsNeededOn(IReadOnlySet<string>? workableBands) =>
-        IsNeeded && (workableBands is null || NeededBands.Any(workableBands.Contains));
+        NeededModesByBand.Keys.Any(band => workableBands is null || workableBands.Contains(band));
 }

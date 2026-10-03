@@ -45,6 +45,7 @@ public sealed class NeededCalculator
                 IsNeeded = true,
                 NeededBands = StandardBands.All,
                 NeededModes = StandardModes.All,
+                NeededModesByBand = AllSlots(),
                 HasAnyQso = false,
                 HasAnyConfirmedQso = false,
             };
@@ -78,6 +79,23 @@ public sealed class NeededCalculator
 
         var isNeeded = !hasAnyQso || !hasAnyConfirmedQso || neededBands.Count > 0 || neededModes.Count > 0;
 
+        // Per band+mode slot: SSB confirmed on 40m says nothing about CW or
+        // Digital on 40m, so each band keeps its own list of unconfirmed modes.
+        var confirmedSlots = confirmedRecords
+            .Where(r => !string.IsNullOrWhiteSpace(r.Band) && !string.IsNullOrWhiteSpace(r.Mode))
+            .Select(r => (Band: r.Band!.ToLowerInvariant(), Mode: StandardModes.Classify(r.Mode!)))
+            .ToHashSet();
+
+        var neededModesByBand = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var band in StandardBands.All)
+        {
+            var missing = StandardModes.All.Where(m => !confirmedSlots.Contains((band.ToLowerInvariant(), m))).ToList();
+            if (missing.Count > 0)
+            {
+                neededModesByBand[band] = missing;
+            }
+        }
+
         return new NeededResult
         {
             Announcement = announcement,
@@ -85,10 +103,14 @@ public sealed class NeededCalculator
             IsNeeded = isNeeded,
             NeededBands = neededBands,
             NeededModes = neededModes,
+            NeededModesByBand = neededModesByBand,
             HasAnyQso = hasAnyQso,
             HasAnyConfirmedQso = hasAnyConfirmedQso,
         };
     }
+
+    private static Dictionary<string, IReadOnlyList<string>> AllSlots() =>
+        StandardBands.All.ToDictionary(b => b, _ => StandardModes.All, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Fallback for when the entity name is actually an IOTA-titled name (common on

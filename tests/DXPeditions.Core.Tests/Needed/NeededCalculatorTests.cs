@@ -113,6 +113,38 @@ public class NeededCalculatorTests
     }
 
     [Fact]
+    public void ConfirmedModeOnABandLeavesTheOtherModesOnThatBandNeeded()
+    {
+        // SSB confirmed on 40m doesn't cover CW or Digital on 40m.
+        var records = new List<AdifRecord> { MakeRecord(Namibia, "40M", "SSB", confirmed: true) };
+        var calculator = new NeededCalculator(records, Reference);
+
+        var result = calculator.Evaluate(MakeAnnouncement("Namibia"));
+
+        Assert.Equal([StandardModes.Cw, StandardModes.Digital], result.NeededModesByBand["40m"]);
+        Assert.True(result.IsNeededOn(new HashSet<string> { "40m" }));
+    }
+
+    [Fact]
+    public void BandWithEveryModeConfirmedIsNotNeededOnThatBand()
+    {
+        var records = new List<AdifRecord>
+        {
+            MakeRecord(Namibia, "40m", "SSB", confirmed: true),
+            MakeRecord(Namibia, "40m", "CW", confirmed: true),
+            MakeRecord(Namibia, "40m", "FT8", confirmed: true),
+            MakeRecord(Namibia, "20m", "CW", confirmed: false),
+        };
+        var calculator = new NeededCalculator(records, Reference);
+
+        var result = calculator.Evaluate(MakeAnnouncement("Namibia"));
+
+        Assert.False(result.NeededModesByBand.ContainsKey("40m"));
+        Assert.False(result.IsNeededOn(new HashSet<string> { "40m" }));
+        Assert.True(result.IsNeededOn(new HashSet<string> { "40m", "20m" }));
+    }
+
+    [Fact]
     public void ModeUniverseIsFixedToCwSsbAndDigitalRegardlessOfLogContent()
     {
         // The mode universe is a fixed 3-bucket set (CW/SSB/Digital), mirroring

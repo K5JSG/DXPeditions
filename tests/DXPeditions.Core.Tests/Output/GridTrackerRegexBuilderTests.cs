@@ -7,8 +7,9 @@ namespace DXPeditions.Core.Tests.Output;
 
 public class GridTrackerRegexBuilderTests
 {
+    // A needed result with no specific bands given is needed on every band.
     private static NeededResult MakeResult(bool needed, params string[] callsigns) =>
-        MakeResult(needed, neededBands: [], callsigns);
+        MakeResult(needed, neededBands: needed ? [.. StandardBands.All] : [], callsigns);
 
     private static NeededResult MakeResult(bool needed, string[] neededBands, params string[] callsigns) => new()
     {
@@ -22,6 +23,7 @@ public class GridTrackerRegexBuilderTests
         IsNeeded = needed,
         NeededBands = neededBands,
         NeededModes = [],
+        NeededModesByBand = neededBands.ToDictionary(b => b, _ => (IReadOnlyList<string>)StandardModes.All),
         HasAnyQso = false,
         HasAnyConfirmedQso = false,
     };
@@ -92,18 +94,6 @@ public class GridTrackerRegexBuilderTests
         var regex = GridTrackerRegexBuilder.Build(results, workableBands: new HashSet<string> { "20m" });
 
         Assert.Contains("^V51WH$", regex);
-    }
-
-    [Fact]
-    public void ExcludesAnEntityNeededPurelyForAModeReasonWhenBandsAreLimited()
-    {
-        // Already confirmed on every band (NeededBands empty) - with a band filter
-        // only unconfirmed checked bands count, so a mode-only need is left out.
-        var results = new[] { MakeResult(needed: true, neededBands: [], "V51WH") };
-
-        var regex = GridTrackerRegexBuilder.Build(results, workableBands: new HashSet<string> { "20m" });
-
-        Assert.Equal(string.Empty, regex);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ public class NeededResultTests
     private static readonly HashSet<string> FortyToTen =
         new(["40m", "30m", "20m", "17m", "15m", "12m", "10m"], StringComparer.OrdinalIgnoreCase);
 
-    private static NeededResult MakeResult(bool needed, string[] neededBands, string[] neededModes) => new()
+    private static NeededResult MakeResult(Dictionary<string, IReadOnlyList<string>> neededModesByBand) => new()
     {
         Announcement = new DxpeditionAnnouncement
         {
@@ -17,54 +17,43 @@ public class NeededResultTests
             RawEntityName = "Test Entity",
             SourceUrl = "http://example.com",
         },
-        IsNeeded = needed,
-        NeededBands = neededBands,
-        NeededModes = neededModes,
+        IsNeeded = neededModesByBand.Count > 0,
+        NeededBands = [],
+        NeededModes = [],
+        NeededModesByBand = neededModesByBand,
         HasAnyQso = true,
         HasAnyConfirmedQso = true,
     };
 
     [Fact]
-    public void NotNeededOnUnworkableBandsOnly()
+    public void NotNeededWhenOnlyUncheckedBandsHaveMissingModes()
     {
-        var result = MakeResult(needed: true, ["160m", "80m", "60m", "6m"], []);
+        var result = MakeResult(new() { ["160m"] = ["CW", "SSB"], ["6m"] = ["Digital"] });
 
         Assert.False(result.IsNeededOn(FortyToTen));
     }
 
     [Fact]
-    public void NeededWhenAnyNeededBandIsWorkable()
+    public void NeededWhenACheckedBandIsMissingAMode()
     {
-        var result = MakeResult(needed: true, ["160m", "20m"], []);
+        // 40m SSB confirmed, but 40m CW isn't - still needed on 40m.
+        var result = MakeResult(new() { ["40m"] = ["CW"] });
 
         Assert.True(result.IsNeededOn(FortyToTen));
     }
 
     [Fact]
-    public void ModeNeedDoesNotCountWhenNeededBandsAreUnworkable()
-    {
-        Assert.False(MakeResult(needed: true, ["160m"], ["CW"]).IsNeededOn(FortyToTen));
-        Assert.False(MakeResult(needed: true, [], ["CW"]).IsNeededOn(FortyToTen));
-    }
-
-    [Fact]
     public void NothingIsNeededWithNoBandsChecked()
     {
-        var empty = new HashSet<string>();
+        var result = MakeResult(new() { ["20m"] = ["CW"] });
 
-        Assert.False(MakeResult(needed: true, ["20m"], ["CW"]).IsNeededOn(empty));
+        Assert.False(result.IsNeededOn(new HashSet<string>()));
     }
 
     [Fact]
-    public void NullWorkableBandsFallsBackToIsNeeded()
+    public void NullWorkableBandsMeansEveryBand()
     {
-        Assert.True(MakeResult(needed: true, ["160m"], []).IsNeededOn(null));
-        Assert.False(MakeResult(needed: false, [], []).IsNeededOn(null));
-    }
-
-    [Fact]
-    public void NeverNeededWhenNotNeededAtAll()
-    {
-        Assert.False(MakeResult(needed: false, [], []).IsNeededOn(FortyToTen));
+        Assert.True(MakeResult(new() { ["160m"] = ["CW"] }).IsNeededOn(null));
+        Assert.False(MakeResult([]).IsNeededOn(null));
     }
 }
