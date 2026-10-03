@@ -52,7 +52,7 @@ public partial class MainForm : Form
         btnFetch.Enabled = false;
         dgvResults.DataSource = null;
         txtGridTrackerRegex.Text = string.Empty;
-        txtHrdChecklist.Text = string.Empty;
+        txtHrdRegex.Text = string.Empty;
 
         var year = (int)numYear.Value;
         var month = cmbMonth.SelectedIndex + 1;
@@ -98,7 +98,7 @@ public partial class MainForm : Form
 
             PopulateGrid(results);
             txtGridTrackerRegex.Text = GridTrackerRegexBuilder.Build(results, GetWorkableBands());
-            txtHrdChecklist.Text = HrdChecklistBuilder.Build(results);
+            txtHrdRegex.Text = HrdRegexChunker.Build(txtGridTrackerRegex.Text);
 
             var neededCount = results.Count(r => r.IsNeeded);
             var iotaNote = iotaTask.Result.Count == 0 ? ", IOTA lookup unavailable this run" : "";
@@ -157,9 +157,9 @@ public partial class MainForm : Form
 
     private void BtnCopyHrd_Click(object? sender, EventArgs e)
     {
-        if (txtHrdChecklist.Text.Length > 0)
+        if (txtHrdRegex.Text.Length > 0)
         {
-            Clipboard.SetText(txtHrdChecklist.Text);
+            Clipboard.SetText(txtHrdRegex.Text);
         }
     }
 

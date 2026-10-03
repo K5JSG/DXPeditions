@@ -12,7 +12,7 @@ Built by Jeremy S. Gaynor, K5JSG.
 - **Robust DXCC resolution**: falls back from an exact name match, to IOTA reference lookup, to matching the callsign's own prefix against the DXCC entity table — so an odd source-specific spelling (a sub-national descriptor, an abbreviation, a garbled title) doesn't get silently mislabeled as "never worked."
 - **Workable-bands filter**: uncheck any band your station can't work and the GridTracker regex leaves out entities whose only unmet need is on a band you can't use, without touching the rest of the needed-analysis.
 - **Fast on repeat runs**: dx-world.net's per-article fetch (normally the slow part) is skipped whenever a cheaper source already has the same callsign's dates, and whatever's still fetched is cached locally between runs. IOTA reference data is cached too and only re-checked about once a month.
-- **One-click output**: a GridTracker 2 "Regex Limiter" string and an HRD DX Cluster Alarms checklist, each with its own Copy to Clipboard button.
+- **One-click output**: a GridTracker 2 "Regex Limiter" string, plus the same regex split into blank-line-separated blocks of 300 characters or less for pasting into HRD DX Cluster Alarms, each with its own Copy to Clipboard button.
 - **Branded app icon and in-window logo** — the DXPeditions logo is the exe/taskbar/title-bar icon and is also shown full-size in the main window.
 
 ## Installation

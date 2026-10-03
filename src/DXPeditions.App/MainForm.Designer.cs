@@ -29,7 +29,7 @@ partial class MainForm
     private TextBox txtGridTrackerRegex;
     private Button btnCopyGridTracker;
     private GroupBox grpHrd;
-    private TextBox txtHrdChecklist;
+    private TextBox txtHrdRegex;
     private Button btnCopyHrd;
     private PictureBox picLogo;
 
@@ -51,7 +51,7 @@ partial class MainForm
         txtGridTrackerRegex = new TextBox { Name = "txtGridTrackerRegex" };
         btnCopyGridTracker = new Button { Name = "btnCopyGridTracker" };
         grpHrd = new GroupBox { Name = "grpHrd" };
-        txtHrdChecklist = new TextBox { Name = "txtHrdChecklist" };
+        txtHrdRegex = new TextBox { Name = "txtHrdRegex" };
         btnCopyHrd = new Button { Name = "btnCopyHrd" };
         picLogo = new PictureBox { Name = "picLogo" };
 
@@ -174,16 +174,16 @@ partial class MainForm
 
         // grpHrd
         grpHrd.Dock = DockStyle.Fill;
-        grpHrd.Text = "HRD Alarm Checklist";
-        grpHrd.Controls.Add(txtHrdChecklist);
+        grpHrd.Text = "HRD Alarm Regex Limiter";
+        grpHrd.Controls.Add(txtHrdRegex);
         grpHrd.Controls.Add(btnCopyHrd);
 
-        // txtHrdChecklist
-        txtHrdChecklist.Multiline = true;
-        txtHrdChecklist.ReadOnly = true;
-        txtHrdChecklist.ScrollBars = ScrollBars.Vertical;
-        txtHrdChecklist.Dock = DockStyle.Fill;
-        txtHrdChecklist.Font = new Font(FontFamily.GenericMonospace, 9F);
+        // txtHrdRegex
+        txtHrdRegex.Multiline = true;
+        txtHrdRegex.ReadOnly = true;
+        txtHrdRegex.ScrollBars = ScrollBars.Vertical;
+        txtHrdRegex.Dock = DockStyle.Fill;
+        txtHrdRegex.Font = new Font(FontFamily.GenericMonospace, 9F);
 
         // btnCopyHrd
         btnCopyHrd.Dock = DockStyle.Bottom;
