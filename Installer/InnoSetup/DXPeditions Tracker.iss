@@ -74,7 +74,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; \
 
 [Files]
 Source: "..\..\publish\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme skipifsourcedoesntexist
+Source: "..\..\README.md"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\..\License.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
@@ -88,6 +88,7 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName} now"; \
     Flags: postinstall nowait skipifsilent
+Filename: "{app}\README.md"; Description: "View the README"; Flags: postinstall shellexec skipifsilent unchecked
 
 [Code]
 
